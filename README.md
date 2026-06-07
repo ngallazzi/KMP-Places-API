@@ -62,8 +62,23 @@ fun MyLayout(){
         }
     }
 }
-
 ```
+
+### Debouncing API calls
+
+By default, the API is called on every keystroke. To reduce network requests while typing, use the `debounceMs` parameter:
+
+```kotlin
+PlaceAutoCompleteTextField(
+    label = "Please search a place",
+    modifier = Modifier.fillMaxWidth().padding(24.dp),
+    debounceMs = 300, // wait 300ms after the user stops typing
+    onSuggestionSelected = { placeDetails ->
+        placeDetailsState = placeDetails
+    })
+```
+
+The same parameter is also available on `AddressAutocompleteForm`. A value of `0` (default) disables debouncing.
 ## 💬 Feedback
 Please feel free to open an issue if you have any feedback or suggestions. PRs are welcome too!
 

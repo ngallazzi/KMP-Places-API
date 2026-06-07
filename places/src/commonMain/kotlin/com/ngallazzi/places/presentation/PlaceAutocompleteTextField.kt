@@ -49,6 +49,9 @@ import kotlinx.coroutines.launch
  * @param leadingIcon Optional composable displayed at the start of the text field.
  * @param supportingText Optional composable displayed below the text field.
  * @param languageCode The BCP-47 language code to use for suggestions. Defaults to the current locale.
+ * @param debounceMs Debounce delay in milliseconds before making the API call while typing.
+ *        Defaults to 0 (no debounce, fires on every keystroke). Set to a higher value (e.g. 300)
+ *        to reduce API calls while the user is typing.
  * @param textStyle The style of the input text. Defaults to [LocalTextStyle.current].
  * @param colors Colors used for the text field. Defaults to [OutlinedTextFieldDefaults.colors].
  * @param shape The shape of the text field. Defaults to [OutlinedTextFieldDefaults.shape].
@@ -74,25 +77,29 @@ fun PlaceAutoCompleteTextField(
     leadingIcon: @Composable (() -> Unit)? = null,
     supportingText: @Composable (() -> Unit)? = null,
     languageCode: String = Locale.current.language,
+    debounceMs: Long = 0,
     textStyle: TextStyle = LocalTextStyle.current,
     colors: TextFieldColors = OutlinedTextFieldDefaults.colors(),
     shape: Shape = OutlinedTextFieldDefaults.shape,
     onSuggestionSelected: suspend (PlaceDetails) -> Unit,
     onClearText: () -> Unit = {},
-    onError: (Throwable?) -> Unit = {}
+    onError: (Throwable?) -> Unit = {},
 ) {
-    val helper = remember {
-        PlacesHelper(KMPPlaces.getApiKey())
-    }
+    val helper =
+        remember {
+            PlacesHelper(KMPPlaces.getApiKey())
+        }
     val coroutineScope = rememberCoroutineScope()
 
-    val viewModel = remember(key1 = text) {
-        PlaceAutoCompleteTextFieldModel(
-            helper = helper,
-            languageCode = languageCode,
-            initialText = text
-        )
-    }
+    val viewModel =
+        remember(key1 = text) {
+            PlaceAutoCompleteTextFieldModel(
+                helper = helper,
+                languageCode = languageCode,
+                initialText = text,
+                debounceMs = debounceMs,
+            )
+        }
     val state = viewModel.uiState.collectAsState()
 
     val actualLabel = @Composable { Text(label) }
@@ -137,13 +144,15 @@ fun PlaceAutoCompleteTextField(
                     }
                 }
             },
-            supportingText = supportingText
+            supportingText = supportingText,
         )
         DropdownMenu(
             properties = PopupProperties(focusable = false, dismissOnClickOutside = true),
-            expanded = state.value.isSuggestionsPopupExpanded, onDismissRequest = {
+            expanded = state.value.isSuggestionsPopupExpanded,
+            onDismissRequest = {
                 viewModel.onSuggestionPopupDismissRequested()
-            }, content = dropDownMenuContent
+            },
+            content = dropDownMenuContent,
         )
         if (state.value.error != null) {
             onError(state.value.error)

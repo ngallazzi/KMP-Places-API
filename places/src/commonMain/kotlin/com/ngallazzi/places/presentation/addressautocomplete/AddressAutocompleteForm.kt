@@ -32,6 +32,8 @@ import com.ngallazzi.places.presentation.PlaceAutoCompleteTextField
  * @param countryLabel Label for the country field. Defaults to "Country".
  * @param postalCodeLabel Label for the postal code field. Defaults to "Postal code".
  * @param ctaLabel Label for the call-to-action (submit) button. Defaults to "Submit".
+ * @param debounceMs Debounce delay in milliseconds before making the API call while typing.
+ *        Defaults to 0 (no debounce). See [PlaceAutoCompleteTextField].
  * @param formVerticalSpacing Vertical spacing between form elements. Defaults to 16.dp.
  * @param submitButtonHeight Height of the submit button. Defaults to 32.dp.
  * @param onSubmit Callback triggered when the submit button is clicked.
@@ -53,17 +55,20 @@ fun AddressAutocompleteForm(
     countryLabel: String = "Country",
     postalCodeLabel: String = "Postal code",
     ctaLabel: String = "Submit",
+    debounceMs: Long = 0,
     formVerticalSpacing: Dp = VERTICAL_SPACING,
     submitButtonHeight: Dp = BUTTON_HEIGHT,
     onSubmit: (state: AddressAutocompleteFormState) -> Unit,
 ) {
-    val viewModel: AddressAutocompleteFormViewModel = remember {
-        AddressAutocompleteFormViewModel()
-    }
+    val viewModel: AddressAutocompleteFormViewModel =
+        remember {
+            AddressAutocompleteFormViewModel()
+        }
     val state = viewModel.uiState.collectAsState().value
 
     Column(
-        modifier, horizontalAlignment = Alignment.CenterHorizontally
+        modifier,
+        horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         PlaceAutoCompleteTextField(
             modifier = Modifier.fillMaxWidth(),
@@ -74,21 +79,25 @@ fun AddressAutocompleteForm(
             text = state.address,
             onClearText = {
                 viewModel.onAddressCleared()
-            })
+            },
+            debounceMs = debounceMs,
+        )
         Spacer(modifier = Modifier.height(formVerticalSpacing))
         OutlinedTextField(
             modifier = Modifier.fillMaxWidth(),
             label = { Text(cityLabel) },
             readOnly = true,
             value = state.city,
-            onValueChange = {})
+            onValueChange = {},
+        )
         Spacer(modifier = Modifier.height(formVerticalSpacing))
         OutlinedTextField(
             modifier = Modifier.fillMaxWidth(),
             label = { Text(countryLabel) },
             readOnly = true,
             value = state.country,
-            onValueChange = {})
+            onValueChange = {},
+        )
         Spacer(modifier = Modifier.height(formVerticalSpacing))
         OutlinedTextField(
             modifier = Modifier.fillMaxWidth(),
@@ -97,13 +106,16 @@ fun AddressAutocompleteForm(
             value = state.postalCode,
             onValueChange = {
                 viewModel.onPostalCodeChanged(it)
-            })
+            },
+        )
         Spacer(modifier = Modifier.height(formVerticalSpacing * 2))
         Button(
             modifier = Modifier.fillMaxWidth().defaultMinSize(minHeight = submitButtonHeight),
             onClick = {
                 onSubmit(state)
-            }, content = { Text(ctaLabel) }, enabled = state.isValid()
+            },
+            content = { Text(ctaLabel) },
+            enabled = state.isValid(),
         )
     }
 }
